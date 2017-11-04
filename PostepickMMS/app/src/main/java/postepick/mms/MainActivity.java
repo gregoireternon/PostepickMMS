@@ -18,6 +18,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,6 +29,7 @@ import java.io.InputStreamReader;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
+
 
 
 
@@ -51,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         extractButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ExportMMSTask exporter = new ExportMMSTask(MainActivity.this,extractButton);
+                ExportMMSTask exporter = new ExportMMSTaskToZip(MainActivity.this,extractButton);
                 exporter.launch();
             }
         });
@@ -78,4 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
+
 }
