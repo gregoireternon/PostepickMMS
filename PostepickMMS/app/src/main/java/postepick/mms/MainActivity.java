@@ -1,6 +1,7 @@
 package postepick.mms;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -29,10 +30,8 @@ import java.io.InputStreamReader;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
-
-
-
-
+    DriveConnector driveConnector=null;
+    private static final int REQUEST_CODE_RESOLUTION = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,8 +53,40 @@ public class MainActivity extends AppCompatActivity {
         extractButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ExportMMSTask exporter = new ExportMMSTaskToZip(MainActivity.this,extractButton);
+                ExportMMSTask exporter = new ExportMMSTaskToZip(MainActivity.this, new TaskEventHandler() {
+                    @Override
+                    public void onStart() {
+                        extractButton.setText(R.string.launch_button_launched);
+                    }
+
+                    @Override
+                    public void onFinished() {
+                        extractButton.setText(R.string.launch_button);
+                    }
+                });
                 exporter.launch();
+            }
+        });
+        final Button driveExportButton = (Button) findViewById(R.id.ExportToDrive);
+        driveExportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(MainActivity.this.driveConnector==null){
+                    DriveConnector dc = new DriveConnector(MainActivity.this, new TaskEventHandler() {
+                        @Override
+                        public void onStart() {
+                            extractButton.setText(R.string.export_button_launched);
+                        }
+
+                        @Override
+                        public void onFinished() {
+                            extractButton.setText(R.string.launch_button);
+                        }
+                    });
+                    MainActivity.this.driveConnector = dc;
+                }
+
+                MainActivity.this.driveConnector.exportToDrive();
             }
         });
     }
@@ -82,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
-
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode==REQUEST_CODE_RESOLUTION){
+            if(resultCode==RESULT_OK) {
+                driveConnector.exportToDrive();
+            }
+        }
+    }
 }

@@ -3,9 +3,7 @@ package postepick.mms;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Button;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -20,8 +18,8 @@ import java.util.zip.ZipOutputStream;
  */
 
 public class ExportMMSTaskToZip extends ExportMMSTask {
-    public ExportMMSTaskToZip(Context c, Button button) {
-        super(c, button);
+    public ExportMMSTaskToZip(Context c, TaskEventHandler eHandler) {
+        super(c, eHandler);
     }
 
     ZipOutputStream zous=null;
@@ -29,9 +27,9 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
 
     @Override
     protected Boolean doInBackground(Void... voids) {
-        File eS = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        File myFold = new File(eS + "/mmsFold");
-        File zipResult = new File(myFold+"/monZip.zip");
+
+        File myFold = new File(Postepick.getStorageFolder());
+        File zipResult = Postepick.getZipFile();
 
         try {
             myFold.mkdirs();

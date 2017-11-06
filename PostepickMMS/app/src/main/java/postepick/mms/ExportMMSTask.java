@@ -10,11 +10,9 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.widget.Button;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,16 +27,17 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
 
     Context _context;
 
-    Button _button;
+    TaskEventHandler _localEventHandler;
 
 
-    public ExportMMSTask(Context c, Button button){
+    public ExportMMSTask(Context c, TaskEventHandler eHandler){
         _context = c;
-        _button = button;
+        _localEventHandler = eHandler;
     }
 
     public void launch(){
-        _button.setText(R.string.launch_button_launched);
+        _localEventHandler.onStart();
+        //_button.setText(R.string.launch_button_launched);
         this.execute();
     }
 
@@ -88,7 +87,8 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean aBoolean) {
-        _button.setText(R.string.launch_button);
+        _localEventHandler.onFinished();
+        //_button.setText(R.string.launch_button);
         super.onPostExecute(aBoolean);
 
     }
@@ -118,8 +118,8 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
     }
 
     protected void writeMMS(InputStream is,String type) throws IOException {
-        File eS = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        File myFold = new File(eS + "/mmsFold");
+
+        File myFold = new File(Postepick.getStorageFolder());
         if(!myFold.exists()){
             if(!myFold.mkdirs()){
                 Log.w(null, "pas de repertoire créé: ", null);
