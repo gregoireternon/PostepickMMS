@@ -17,8 +17,10 @@
             android:name="postepick.mms.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
+            <meta-data android:name="com.google.android.apps.drive.APP_ID" android:value="id=postepick.mms" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="com.google.android.apps.drive.DRIVE_OPEN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

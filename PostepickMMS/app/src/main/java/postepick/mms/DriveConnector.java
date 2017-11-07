@@ -16,7 +16,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.MetadataChangeSet;
-
+import android.content.IntentSender.SendIntentException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -65,6 +65,7 @@ public class DriveConnector implements GoogleApiClient.ConnectionCallbacks,
     public void onConnected(@Nullable Bundle bundle) {
         Log.i(getClass().getName(),"Connected to GoogleDrive");
         ExportMMSTaskToZip exportTask = new ExportMMSTaskToZip(_context,this);
+        exportTask.launch();
     }
 
     @Override
@@ -137,6 +138,12 @@ public class DriveConnector implements GoogleApiClient.ConnectionCallbacks,
                         .setInitialDriveContents(res.getDriveContents())
                         .build(_googleClient);
 
+                try {
+                    DriveConnector.this._context.startIntentSenderForResult(
+                            intentSender, 0, null, 0, 0, 0);
+                } catch (SendIntentException e) {
+                    Log.i(getClass().getName(), "Failed to launch file chooser.");
+                }
                 DriveConnector.this._taskEventHandler.onFinished();
             }
         });
