@@ -115,10 +115,25 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode==REQUEST_CODE_RESOLUTION){
-            if(resultCode==RESULT_OK) {
-                driveConnector.exportToDrive();
-            }
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case DriveConnector.REQUEST_CODE_SIGN_IN:
+                Log.i(getClass().getName(), "Sign in request code");
+                // Called after user is signed in.
+                if (resultCode == RESULT_OK) {
+                    Log.i(getClass().getName(), "Signed in successfully.");
+                    this.driveConnector.connected();
+                }
+                break;
+            case DriveConnector.REQUEST_CODE_CREATOR:
+                Log.i(getClass().getName(), "creator request code");
+                // Called after a file is saved to Drive.
+                if (resultCode == RESULT_OK) {
+                    Log.i(getClass().getName(), "Image successfully saved.");
+                   // Just start the camera again for another photo.
+
+                }
+                break;
         }
     }
 }
