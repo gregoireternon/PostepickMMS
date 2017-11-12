@@ -27,10 +27,6 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
 
     @Override
     protected Boolean doInBackground(Void... voids) {
-        if(true){
-            return true;
-        }
-
         File myFold = new File(Postepick.getStorageFolder());
         File zipResult = Postepick.getZipFile();
 

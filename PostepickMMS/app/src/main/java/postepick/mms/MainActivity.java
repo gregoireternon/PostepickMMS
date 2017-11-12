@@ -1,16 +1,9 @@
 package postepick.mms;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -18,16 +11,6 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
     DriveConnector driveConnector=null;
@@ -37,17 +20,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+
 
         final Button extractButton = (Button) findViewById(R.id.LaunchExtract);
         extractButton.setOnClickListener(new View.OnClickListener() {
@@ -75,12 +49,12 @@ public class MainActivity extends AppCompatActivity {
                     DriveConnector dc = new DriveConnector(MainActivity.this, new TaskEventHandler() {
                         @Override
                         public void onStart() {
-                            extractButton.setText(R.string.export_button_launched);
+                            driveExportButton.setText(R.string.drive_export_button_launched);
                         }
 
                         @Override
                         public void onFinished() {
-                            extractButton.setText(R.string.launch_button);
+                            driveExportButton.setText(R.string.drive_export_button);
                         }
                     });
                     MainActivity.this.driveConnector = dc;
