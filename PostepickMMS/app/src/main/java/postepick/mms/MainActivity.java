@@ -19,28 +19,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setBackgroundDrawable(getResources().getDrawable(R.drawable.settings_bg_remote));
         setContentView(R.layout.activity_main);
 
 
 
-        final Button extractButton = (Button) findViewById(R.id.LaunchExtract);
-        extractButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ExportMMSTask exporter = new ExportMMSTaskToZip(MainActivity.this, new TaskEventHandler() {
-                    @Override
-                    public void onStart() {
-                        extractButton.setText(R.string.launch_button_launched);
-                    }
 
-                    @Override
-                    public void onFinished() {
-                        extractButton.setText(R.string.launch_button);
-                    }
-                });
-                exporter.launch();
-            }
-        });
         final Button driveExportButton = (Button) findViewById(R.id.ExportToDrive);
         driveExportButton.setOnClickListener(new View.OnClickListener() {
             @Override

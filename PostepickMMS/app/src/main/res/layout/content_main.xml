@@ -12,16 +12,11 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-
+        android:text="Hello! This a very simple application that exports all of your SMS/MMS content in a zip file on your google drive cloud storage"
+        android:layout_margin="20dp"
         />
 
-    <Button
-        android:id="@+id/LaunchExtract"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/launch_button"
-        tools:layout_editor_absoluteY="7dp" />
+
 
     <Button
         android:id="@+id/ExportToDrive"

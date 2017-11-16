@@ -17,6 +17,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -28,6 +30,8 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
     Context _context;
 
     TaskEventHandler _localEventHandler;
+
+    List<MessageEntity> _messages;
 
 
     public ExportMMSTask(Context c, TaskEventHandler eHandler){
@@ -44,6 +48,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
     @Override
     protected Boolean doInBackground(Void... voids) {
 
+        _messages = new ArrayList<>();
         try {
             Cursor c =  _context.getContentResolver().query(Uri.parse("content://mms/inbox"),null,null,null,null);
             while(c.moveToNext()){
