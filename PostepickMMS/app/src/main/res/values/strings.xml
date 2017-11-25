@@ -4,5 +4,6 @@
     <string name="launch_button">Launch export</string>
     <string name="launch_button_launched">Processing...</string>
     <string name="drive_export_button">Export to Google Drive</string>
-    <string name="drive_export_button_launched">Sending to Drive...</string>
+    <string name="drive_export_button_exporting">Sending to Drive...</string>
+    <string name="drive_export_button_zipping">Preparing your datas...</string>
 </resources>

@@ -14,6 +14,7 @@ import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity {
     DriveConnector driveConnector=null;
+
     private static final int REQUEST_CODE_RESOLUTION = 3;
 
     @Override
@@ -33,12 +34,13 @@ public class MainActivity extends AppCompatActivity {
                     DriveConnector dc = new DriveConnector(MainActivity.this, new TaskEventHandler() {
                         @Override
                         public void onStart() {
-                            driveExportButton.setText(R.string.drive_export_button_launched);
+                            driveExportButton.setEnabled(false);
+                            driveExportButton.setText(R.string.drive_export_button_zipping);
                         }
 
                         @Override
                         public void onFinished() {
-                            driveExportButton.setText(R.string.drive_export_button);
+                            driveExportButton.setText(R.string.drive_export_button_exporting);
                         }
                     });
                     MainActivity.this.driveConnector = dc;
@@ -89,7 +91,10 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK) {
                     Log.i(getClass().getName(), "Image successfully saved.");
                    // Just start the camera again for another photo.
+                    final Button driveExportButton = (Button) findViewById(R.id.ExportToDrive);
+                    driveExportButton.setText(R.string.drive_export_button);
 
+                    driveExportButton.setEnabled(true);
                 }
                 break;
         }
