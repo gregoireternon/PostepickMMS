@@ -17,7 +17,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,7 +33,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
 
     TaskEventHandler _localEventHandler;
 
-    List<MessageEntity> _messages;
+    protected List<MessageEntity> _messages;
 
 
     public ExportMMSTask(Context c, TaskEventHandler eHandler){
@@ -55,10 +57,14 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
                 System.out.println("sms entry");
                 int mmsId = c.getInt(0);
                 String selectionPart = "mid=" + mmsId;
+                MessageEntity me = new MessageEntity();
+                _messages.add(me);
                 Uri uri = Uri.parse("content://mms/part");
                 Cursor cursor = _context.getContentResolver().query(uri, null,
                         selectionPart, null, null);
+                me.setPhoneNumber(getAddressNumber(mmsId));
                 if (cursor.moveToFirst()) {
+                    int imagecpt = 1;
                     do {
                         String partId = cursor.getString(cursor.getColumnIndex("_id"));
                         String type = cursor.getString(cursor.getColumnIndex("ct"));
@@ -71,11 +77,14 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
                             } else {
                                 body = cursor.getString(cursor.getColumnIndex("text"));
                             }
+                            me.setMsgDate(new Date(c.getLong( c.getColumnIndex("date"))*1000));
+                            me.setContent(body);
+                            me.setType(MessageEntity.Type.MMS);
                         }
                         if ("image/jpeg".equals(type) || "image/bmp".equals(type) ||
                                 "image/gif".equals(type) || "image/jpg".equals(type) ||
                                 "image/png".equals(type)) {
-                            getMmsImage(partId, type);
+                            me.getImageNames().add(getMmsImage(partId, type, mmsId + "-"+(imagecpt++))) ;
                         }
                     } while (cursor.moveToNext());
                 }
@@ -98,7 +107,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
 
     }
 
-    private void getMmsImage(String _id, String type) {
+    private String getMmsImage(String _id, String type, String fileName) {
         Uri partURI = Uri.parse("content://mms/part/" + _id);
         InputStream is = null;
         Bitmap bitmap = null;
@@ -108,7 +117,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
             String secStore = System.getenv("SECONDARY_STORAGE");
 
             is = _context.getContentResolver().openInputStream(partURI);
-            writeMMS(is, type);
+            return writeMMS(is, type, fileName);
 
         } catch (IOException e) {
             Log.e(null, "getMmsImage: ",e );
@@ -120,9 +129,39 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
                 } catch (IOException e) {}
             }
         }
+        return null;
     }
 
-    protected void writeMMS(InputStream is,String type) throws IOException {
+
+    private String getAddressNumber(int id) {
+        String selectionAdd = new String("msg_id=" + id);
+        String uriStr = "content://mms/"+id+"/addr";
+        Uri uriAddress = Uri.parse(uriStr);
+        Cursor cAdd = _context.getContentResolver().query(uriAddress, null,
+                selectionAdd, null, null);
+        String name = null;
+        if (cAdd.moveToFirst()) {
+            do {
+                String number = cAdd.getString(cAdd.getColumnIndex("address"));
+                if (number != null) {
+                    try {
+                        Long.parseLong(number.replace("-", ""));
+                        name = number;
+                    } catch (NumberFormatException nfe) {
+                        if (name == null) {
+                            name = number;
+                        }
+                    }
+                }
+            } while (cAdd.moveToNext());
+        }
+        if (cAdd != null) {
+            cAdd.close();
+        }
+        return name;
+    }
+
+    protected String writeMMS(InputStream is,String type, String filePrefix) throws IOException {
 
         File myFold = new File(Postepick.getStorageFolder());
         if(!myFold.exists()){
@@ -140,8 +179,8 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
         else if("image/png".equals(type)){
             fileExtension = ".png";
         }
-        String fileName=myFold.getAbsolutePath()+"/"+ UUID.randomUUID().toString()+fileExtension;
-        FileOutputStream fos = new FileOutputStream(new File(fileName));
+        String fileName= filePrefix + fileExtension;
+        FileOutputStream fos = new FileOutputStream(new File(myFold.getAbsolutePath()+"/"+fileName));
         try{
             byte[] buffer = new byte[8 * 1024];
             int bytesRead;
@@ -150,6 +189,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
             }
         }catch(Exception e){
             Log.e(getClass().getName(),"Error saving file",e);
+            return null;
         }finally{
             try {
                 is.close();
@@ -159,6 +199,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
             }catch(Exception e2){}
         }
         Log.i(null, "getMmsImage: file written:"+fileName);
+        return fileName;
     }
 
     private String getMmsText(String id)  {

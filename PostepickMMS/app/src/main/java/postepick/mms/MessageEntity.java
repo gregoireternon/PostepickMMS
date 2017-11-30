@@ -1,10 +1,18 @@
 package postepick.mms;
 
+import android.os.Message;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 /**
  * Created by Gregoire on 14/11/2017.
  */
 
 public class MessageEntity {
+
+
 
     public static enum Type{
         SMS,
@@ -16,6 +24,10 @@ public class MessageEntity {
     String _content;
 
     String _phoneNumber;
+
+    Date _msgDate;
+
+    List<String> _imageNames = new ArrayList<>();
 
     public Type getType() {
         return _type;
@@ -39,5 +51,17 @@ public class MessageEntity {
 
     public void setPhoneNumber(String _phoneNumber) {
         this._phoneNumber = _phoneNumber;
+    }
+
+    public Date getMsgDate() {
+        return _msgDate;
+    }
+
+    public void setMsgDate(Date _msgDate) {
+        this._msgDate = _msgDate;
+    }
+
+    public List<String> getImageNames() {
+        return this._imageNames;
     }
 }

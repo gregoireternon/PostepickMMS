@@ -2,13 +2,22 @@ package postepick.mms;
 
 import android.content.Context;
 import android.os.Environment;
+import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
+
+import com.google.gson.Gson;
+
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -25,6 +34,8 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
     ZipOutputStream zous=null;
 
 
+
+
     @Override
     protected Boolean doInBackground(Void... voids) {
         File myFold = new File(Postepick.getStorageFolder());
@@ -34,6 +45,7 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
             myFold.mkdirs();
             zous = new ZipOutputStream(new FileOutputStream(zipResult));
             Boolean res =super.doInBackground(voids);
+            writeJson();
             try{
                 zous.close();
             }catch(Exception e){
@@ -49,8 +61,27 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
         return false;
     }
 
+    private void writeJson() {
+        ZipEntry e = new ZipEntry("mmscontent.json");
+        try{
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            zous.putNextEntry(e);
+            OutputStreamWriter writer = new OutputStreamWriter(zous);
+            Gson gson = new Gson();
+            writer.write(gson.toJson(_messages));
+            writer.flush();
+            zous.closeEntry();
+        }catch(Exception ess){
+            Log.e(getClass().getName(),"Error saving json",ess);
+
+        }finally{
+
+        }
+    }
+
     @Override
-    protected void writeMMS(InputStream is, String type) throws IOException {
+    protected String writeMMS(InputStream is, String type, String filePrefix) throws IOException {
 
         String fileExtension = ".jpg";
         if ("image/bmp".equals(type)){
@@ -62,7 +93,7 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
         else if("image/png".equals(type)){
             fileExtension = ".png";
         }
-        String fileName=UUID.randomUUID().toString()+fileExtension;
+        String fileName=filePrefix+fileExtension;
         ZipEntry e = new ZipEntry(fileName);
         try{
             byte[] buffer = new byte[8 * 1024];
@@ -74,12 +105,14 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
             zous.closeEntry();
         }catch(Exception ess){
             Log.e(getClass().getName(),"Error saving file",ess);
+            return null;
         }finally{
             try {
                 is.close();
             }catch(Exception e2){}
         }
         Log.i(null, "getMmsImage: file written:"+fileName);
+        return fileName;
     }
 
 }
