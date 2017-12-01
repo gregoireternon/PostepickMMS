@@ -58,11 +58,16 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
                 int mmsId = c.getInt(0);
                 String selectionPart = "mid=" + mmsId;
                 MessageEntity me = new MessageEntity();
-                _messages.add(me);
+
                 Uri uri = Uri.parse("content://mms/part");
                 Cursor cursor = _context.getContentResolver().query(uri, null,
                         selectionPart, null, null);
                 me.setPhoneNumber(getAddressNumber(mmsId));
+                if(!me.getPhoneNumber().matches(".*\\d+.*")){
+                    continue;
+                }
+
+                _messages.add(me);
                 if (cursor.moveToFirst()) {
                     int imagecpt = 1;
                     do {
@@ -94,6 +99,20 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
         }catch(Exception e){
             Log.e(this.getClass().getName(),"Error exporting mms", e);
             return false;
+        }
+
+        try{
+            Cursor c =  _context.getContentResolver().query(Uri.parse("content://sms"),null,null,null,null);
+            while(c.moveToNext()){
+                MessageEntity me = new MessageEntity();
+                me.setMsgDate(new Date(Long.parseLong(c.getString(c.getColumnIndex("date")))));
+                me.setPhoneNumber(c.getString(c.getColumnIndex("address")));
+                me.setType(MessageEntity.Type.SMS);
+                me.setContent(c.getString(c.getColumnIndex("body")));
+                _messages.add(me);
+            }
+        }catch(Exception e){
+            Log.w("Wasn't able to read SMS", e);
         }
 
         return true;
