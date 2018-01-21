@@ -38,8 +38,8 @@ public class ExportMMSTaskToZip extends ExportMMSTask {
 
     @Override
     protected Boolean doInBackground(Void... voids) {
-        File myFold = new File(Postepick.getStorageFolder());
-        File zipResult = Postepick.getZipFile();
+        File myFold = _context.getCacheDir();// new File(Postepick.getStorageFolder());
+        File zipResult = Postepick.getZipFile(myFold);
 
         try {
             myFold.mkdirs();

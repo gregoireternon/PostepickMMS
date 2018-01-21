@@ -182,12 +182,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
 
     protected String writeMMS(InputStream is,String type, String filePrefix) throws IOException {
 
-        File myFold = new File(Postepick.getStorageFolder());
-        if(!myFold.exists()){
-            if(!myFold.mkdirs()){
-                Log.w(null, "pas de repertoire créé: ", null);
-            }
-        }
+        File myFold = _context.getCacheDir(); //new File(Postepick.getStorageFolder());
         String fileExtension = ".jpg";
         if ("image/bmp".equals(type)){
             fileExtension = ".bmp";

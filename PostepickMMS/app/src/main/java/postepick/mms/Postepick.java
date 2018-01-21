@@ -11,10 +11,8 @@ import java.io.File;
 public class Postepick {
     public final static String MMS_FOLDER = "/mmsFold";
 
-    public static String getStorageFolder(){
-        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + MMS_FOLDER;
-    }
-    public static File getZipFile(){
-        return new File(getStorageFolder()+"/monZip.zip");
+
+    public static File getZipFile(File targetdir){
+        return new File(targetdir+"/monZip.zip");
     }
 }

@@ -1,9 +1,12 @@
 package postepick.mms;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -27,6 +30,7 @@ import com.google.android.gms.drive.DriveResourceClient;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import android.content.IntentSender.SendIntentException;
@@ -64,9 +68,8 @@ public class DriveConnector implements
 
     public void exportToDrive() {
 
-        File myFold = new File(Postepick.getStorageFolder());
-        myFold.delete();
-        Log.i(getClass().getName(),"mmsFold deleted");
+        File myFold = _context.getCacheDir();//  new File(Postepick.getStorageFolder());
+
         if(_googleSIClient==null){
             Log.i(getClass().getName(),"Creating Google Drive Connection");
             _googleSIClient = buildGoogleSignInClient();
@@ -77,6 +80,7 @@ public class DriveConnector implements
         GoogleSignInOptions signInOptions =
                 new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestScopes(Drive.SCOPE_FILE)
+                        .requestScopes(Drive.SCOPE_APPFOLDER)
                         .build();
         return GoogleSignIn.getClient(this._context, signInOptions);
     }
@@ -85,6 +89,16 @@ public class DriveConnector implements
 
     public void connected() {
         Log.i(getClass().getName(),"Connected to GoogleDrive");
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            int hasWriteContactsPermission = _context.checkSelfPermission(Manifest.permission.READ_SMS);
+            if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
+                _context.requestPermissions(new String[] {Manifest.permission.READ_SMS},
+                        DriveConnector.REQUEST_CODE_SIGN_IN);
+                return;
+            }
+        }
+
+
         ExportMMSTaskToZip exportTask = new ExportMMSTaskToZip(_context,this);
         exportTask.launch();
     }
@@ -117,72 +131,84 @@ public class DriveConnector implements
 
     @Override
     public void onFinished() {
-        Log.i(getClass().getName(), "Export finished, about to send to Drive");
-        _driveClient = Drive.getDriveClient(_context, GoogleSignIn.getLastSignedInAccount(_context));
-        _driveResourceClient = Drive.getDriveResourceClient(this._context, GoogleSignIn.getLastSignedInAccount(_context));
+        try {
+            Log.i(getClass().getName(), "Export finished, about to send to Drive");
+            _driveClient = Drive.getDriveClient(_context, GoogleSignIn.getLastSignedInAccount(_context));
+            _driveResourceClient = Drive.getDriveResourceClient(this._context, GoogleSignIn.getLastSignedInAccount(_context));
 
 
-        _driveResourceClient
-                .createContents()
-                .continueWithTask(
-                        new Continuation<DriveContents, Task<Void>>() {
-                            @Override
-                            public Task<Void> then(@NonNull Task<DriveContents> task) throws Exception {
-                                Log.i(getClass().getName(), "new content created");
-                                OutputStream os = task.getResult().getOutputStream();
-                                FileInputStream fis = null;
-                                try {
-                                    fis = new FileInputStream(Postepick.getZipFile());
-                                    byte[] buffer = new byte[8 * 1024];
-                                    int bytesRead;
-                                    while ((bytesRead = fis.read(buffer)) != -1) {
-                                        os.write(buffer, 0, bytesRead);
-                                    }
-                                } catch (Exception e) {
-                                    Log.e(getClass().getName(), "Error saving file", e);
-                                } finally {
+            _driveResourceClient
+                    .createContents()
+                    .continueWithTask(
+                            new Continuation<DriveContents, Task<Void>>() {
+                                @Override
+                                public Task<Void> then(@NonNull Task<DriveContents> task) throws Exception {
+                                    Log.i(getClass().getName(), "new content created");
+                                    OutputStream os = task.getResult().getOutputStream();
+                                    FileInputStream fis = null;
                                     try {
-                                        fis.close();
-                                    } catch (Exception e2) {
+                                        fis = new FileInputStream(Postepick.getZipFile(_context.getCacheDir()));
+                                        byte[] buffer = new byte[8 * 1024];
+                                        int bytesRead;
+                                        while ((bytesRead = fis.read(buffer)) != -1) {
+                                            os.write(buffer, 0, bytesRead);
+                                        }
+                                    } catch (Exception e) {
+                                        Log.e(getClass().getName(), "Error saving file", e);
+                                    } finally {
+                                        try {
+                                            fis.close();
+                                        } catch (Exception e2) {
+                                        }
+                                        try {
+                                            os.close();
+                                        } catch (Exception e2) {
+                                        }
                                     }
-                                    try {
-                                        os.close();
-                                    } catch (Exception e2) {
-                                    }
+                                    Log.i(getClass().getName(), "File sent to Drive");
+                                    MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
+                                            .setMimeType("application/zip").setTitle("MMSExport.zip").build();
+                                    // Create an intent for the file chooser, and start it.
+                                    CreateFileActivityOptions createFileActivityOptions = new CreateFileActivityOptions.Builder()
+                                            .setInitialMetadata(metadataChangeSet)
+                                            .setInitialDriveContents(task.getResult())
+                                            .build();
+
+                                    DriveConnector.this._taskEventHandler.onFinished();
+                                    return _driveClient
+                                            .newCreateFileActivityIntentSender(createFileActivityOptions)
+                                            .continueWith(
+                                                    new Continuation<IntentSender, Void>() {
+                                                        @Override
+                                                        public Void then(@NonNull Task<IntentSender> task) throws Exception {
+                                                            _context.startIntentSenderForResult(task.getResult(), REQUEST_CODE_CREATOR, null, 0, 0, 0);
+                                                            return null;
+                                                        }
+                                                    });
+
                                 }
-                                Log.i(getClass().getName(), "File sent to Drive");
-                                MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
-                                        .setMimeType("application/zip").setTitle("MMSExport.zip").build();
-                                // Create an intent for the file chooser, and start it.
-                                CreateFileActivityOptions createFileActivityOptions = new CreateFileActivityOptions.Builder()
-                                        .setInitialMetadata(metadataChangeSet)
-                                        .setInitialDriveContents(task.getResult())
-                                        .build();
-
-                                DriveConnector.this._taskEventHandler.onFinished();
-                                return _driveClient
-                                        .newCreateFileActivityIntentSender(createFileActivityOptions)
-                                        .continueWith(
-                                                new Continuation<IntentSender, Void>() {
-                                                    @Override
-                                                    public Void then(@NonNull Task<IntentSender> task) throws Exception {
-                                                        _context.startIntentSenderForResult(task.getResult(), REQUEST_CODE_CREATOR, null, 0, 0, 0);
-                                                        return null;
-                                                    }
-                                                });
-
+                            })
+                    .addOnSuccessListener(
+                            new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    Log.i(getClass().getName(),"SUCCESS");
+                                }
                             }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.w(getClass().getName(), "Failed to create new contents.", e);
-                            }
-                        });
+                    )
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w(getClass().getName(), "Failed to create new contents.", e);
+                                }
+                            });
+
+        } catch (Exception eee) {
+            Log.e(getClass().getName(), "Error");
+        }
 
 
-
-            }
+    }
 
     }
