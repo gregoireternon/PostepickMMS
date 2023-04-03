@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -17,11 +16,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by Gregoire on 03/11/2017.
@@ -182,7 +179,7 @@ public class ExportMMSTask extends AsyncTask<Void, Integer, Boolean> {
 
     protected String writeMMS(InputStream is,String type, String filePrefix) throws IOException {
 
-        File myFold = new File(Postepick.getStorageFolder());
+        File myFold = new File(Postepick.getStorageFolder(_context));
         if(!myFold.exists()){
             if(!myFold.mkdirs()){
                 Log.w(null, "pas de repertoire créé: ", null);

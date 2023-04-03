@@ -1,14 +1,8 @@
 package postepick.mms;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentSender;
-import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -17,10 +11,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.CreateFileActivityOptions;
 import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveClient;
 import com.google.android.gms.drive.DriveContents;
 import com.google.android.gms.drive.DriveResourceClient;
@@ -29,10 +21,8 @@ import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 
-import android.content.IntentSender.SendIntentException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.OutputStream;
 
 /**
@@ -49,6 +39,8 @@ public class DriveConnector implements
     Activity _context = null;
     TaskEventHandler _taskEventHandler=null;
 
+
+
     public static final int REQUEST_CODE_SIGN_IN = 0;
     public static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
     public static final int REQUEST_CODE_CREATOR = 2;
@@ -56,6 +48,7 @@ public class DriveConnector implements
     public DriveConnector(Activity c, TaskEventHandler teh){
         _context = c;
         _taskEventHandler = teh;
+        c.getExternalFilesDir("toto");
     }
 
     public void sendToDrive(){
@@ -64,7 +57,7 @@ public class DriveConnector implements
 
     public void exportToDrive() {
 
-        File myFold = new File(Postepick.getStorageFolder());
+        File myFold = new File(Postepick.getStorageFolder(_context));
         myFold.delete();
         Log.i(getClass().getName(),"mmsFold deleted");
         if(_googleSIClient==null){
@@ -132,7 +125,7 @@ public class DriveConnector implements
                                 OutputStream os = task.getResult().getOutputStream();
                                 FileInputStream fis = null;
                                 try {
-                                    fis = new FileInputStream(Postepick.getZipFile());
+                                    fis = new FileInputStream(Postepick.getZipFile(_context));
                                     byte[] buffer = new byte[8 * 1024];
                                     int bytesRead;
                                     while ((bytesRead = fis.read(buffer)) != -1) {
