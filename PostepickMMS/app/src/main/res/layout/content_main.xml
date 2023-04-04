@@ -24,4 +24,10 @@
         android:layout_height="wrap_content"
         android:text="@string/drive_export_button" />
 
+    <Button
+        android:id="@+id/ImportFromFile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Import files"/>
+
 </LinearLayout>

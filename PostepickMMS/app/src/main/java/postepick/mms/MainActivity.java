@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         final Button driveExportButton = (Button) findViewById(R.id.ExportToDrive);
+        final Button fileImportButton = (Button) findViewById(R.id.ImportFromFile);
         driveExportButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -47,6 +48,29 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 MainActivity.this.driveConnector.exportToDrive();
+            }
+        });
+        fileImportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(MainActivity.this.driveConnector==null){
+                    DriveConnector dc = new DriveConnector(MainActivity.this, new TaskEventHandler() {
+                        @Override
+                        public void onStart() {
+                            fileImportButton.setEnabled(false);
+                            fileImportButton.setText("Importing data...");
+                        }
+
+                        @Override
+                        public void onFinished() {
+                            fileImportButton.setText("Import files");
+                        }
+                    });
+                }
+
+                ImportMMSTask exportTask = new ImportMMSTask(MainActivity.this);
+                exportTask.launch();
+
             }
         });
     }
